@@ -291,12 +291,12 @@ export function Room() {
         >
           Hangup
         </button>
-        {roomId}
       </div>
       <div>{currentRoomText}</div>
-      <div>
+      {!disableJoinRoomBtn && <div>
         <input ref={roomInputEl} />
-      </div>
+      </div>}
+      
       <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
         <VideoRoom stream={localStream} />
         <VideoRoom stream={remoteStream} />
