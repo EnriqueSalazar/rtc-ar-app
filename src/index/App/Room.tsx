@@ -1,31 +1,31 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./Room/Room.module.css";
 import { db } from "../shared/firebase";
-import VideoRoom from './Room/VideoStream';
+import VideoRoom from "./Room/VideoStream";
 
 export function Room() {
+  let peerConnection: RTCPeerConnection | null = null;
+
   const localVideoEl = useRef<HTMLVideoElement>(null);
   const remoteVideoEl = useRef<HTMLVideoElement>(null);
   const roomInputEl = useRef<HTMLInputElement>(null);
 
-  const [disableCameraBtn, setDisableCameraBtn] = useState(false);
   const [disableJoinRoomBtn, setDisableJoinRoomBtn] = useState(false);
   const [disableHangupBtn, setDisableHangupBtn] = useState(false);
   const [disableCreateRoomBtn, setDisableCreateRoomBtn] = useState(true);
-  let peerConnection: RTCPeerConnection | null = null;
-  const [localStream, setLocalStream] = useState<MediaStream>();
-  const [remoteStream, setRemoteStream] = useState<MediaStream>();
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [roomId, setRoomId] = useState("");
   const [currentRoomText, setCurrentRoomText] = useState("");
 
   useEffect(() => {
-    if (localVideoEl.current && localStream) {
+    if (localVideoEl.current) {
       localVideoEl.current.srcObject = localStream;
     }
     console.log("Stream:", localVideoEl?.current?.srcObject);
   }, [localStream]);
   useEffect(() => {
-    if (remoteVideoEl.current && remoteStream) {
+    if (remoteVideoEl.current) {
       remoteVideoEl.current.srcObject = remoteStream;
     }
   }, [remoteStream]);
@@ -211,24 +211,35 @@ export function Room() {
     setLocalStream(stream);
     setRemoteStream(new MediaStream());
 
-    console.log("Stream:", localVideoEl?.current?.srcObject);
-
     setDisableCreateRoomBtn(false);
-    setDisableCameraBtn(true);
     setDisableJoinRoomBtn(false);
     setDisableHangupBtn(false);
+  };
+
+  const closeUserMedia = async () => {
+    setLocalStream(null);
+    setRemoteStream(null);
+
+    peerConnection = null;
+
+    setDisableCreateRoomBtn(true);
+    setDisableJoinRoomBtn(true);
+    setDisableHangupBtn(true);
   };
 
   return (
     <div>
       <div className={styles.row}>
-        <button
-          className={styles.button}
-          onClick={openUserMedia}
-          disabled={disableCameraBtn}
-        >
-          Open Mic & Camera
-        </button>
+        {!localStream && (
+          <button className={styles.button} onClick={openUserMedia}>
+            Open Mic & Camera
+          </button>
+        )}
+        {localStream && (
+          <button className={styles.button} onClick={closeUserMedia}>
+            Disable Mic & Camera
+          </button>
+        )}
         <button
           className={styles.button}
           onClick={createRoom}
@@ -257,8 +268,8 @@ export function Room() {
         <input ref={roomInputEl} />
       </div>
       <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
-        <VideoRoom stream={localStream}/>
-        <VideoRoom stream={remoteStream}/>
+        <VideoRoom stream={localStream} />
+        <VideoRoom stream={remoteStream} />
       </div>
     </div>
   );
