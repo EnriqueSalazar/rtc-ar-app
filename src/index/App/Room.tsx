@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./Room/Room.module.css";
 import { db } from "../shared/firebase";
-import VideoRoom from './Room/VideoRoom';
+import VideoRoom from './Room/VideoStream';
 
 export function Room() {
   const localVideoEl = useRef<HTMLVideoElement>(null);
