@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { db } from "../shared/firebase";
 import VideoRoom from "./Room/VideoStream";
+import Button from "@material-ui/core/Button";
 
 export function Room() {
   const localVideoEl = useRef<HTMLVideoElement>(null);
@@ -8,8 +9,8 @@ export function Room() {
   const roomInputEl = useRef<HTMLInputElement>(null);
 
   const [disableCameraBtn, setDisableCameraBtn] = useState(false);
-  const [disableJoinRoomBtn, setDisableJoinRoomBtn] = useState(false);
-  const [disableHangupBtn, setDisableHangupBtn] = useState(false);
+  const [disableJoinRoomBtn, setDisableJoinRoomBtn] = useState(true);
+  const [disableHangupBtn, setDisableHangupBtn] = useState(true);
   const [disableCreateRoomBtn, setDisableCreateRoomBtn] = useState(true);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -264,38 +265,26 @@ export function Room() {
   return (
     <div>
       <div>
-        {!disableCameraBtn && (
-          <button onClick={openUserMedia}>
-            Open Mic & Camera
-          </button>
-        )}
-        <button
-          
-          onClick={createRoom}
-          disabled={disableCreateRoomBtn}
-        >
+        <Button onClick={openUserMedia} disabled={disableCameraBtn}>
+          Open Mic & Camera
+        </Button>
+        <Button onClick={createRoom} disabled={disableCreateRoomBtn}>
           Create room
-        </button>
-        <button
-          
-          onClick={joinRoom}
-          disabled={disableJoinRoomBtn}
-        >
+        </Button>
+        <Button onClick={joinRoom} disabled={disableJoinRoomBtn}>
           Join room
-        </button>
-        <button
-          
-          onClick={hangUp}
-          disabled={disableHangupBtn}
-        >
+        </Button>
+        <Button onClick={hangUp} disabled={disableHangupBtn}>
           Hangup
-        </button>
+        </Button>
       </div>
       <div>{currentRoomText}</div>
-      {!disableJoinRoomBtn && <div>
-        <input ref={roomInputEl} />
-      </div>}
-      
+      {!disableJoinRoomBtn && (
+        <div>
+          <input ref={roomInputEl} />
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
         <VideoRoom stream={localStream} />
         <VideoRoom stream={remoteStream} />

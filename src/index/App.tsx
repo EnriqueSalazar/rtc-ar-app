@@ -1,14 +1,13 @@
-import React from 'react';
-import { Room } from './App/Room';
-import './App/App.css';
+import React from "react";
+import { Room } from "./App/Room";
+import CssBaseline from "@material-ui/core/CssBaseline";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <Room />
-      </header>
-    </div>
+    <React.Fragment>
+      <CssBaseline />
+      <Room />
+    </React.Fragment>
   );
 }
 
