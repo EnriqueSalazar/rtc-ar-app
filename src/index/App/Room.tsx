@@ -4,12 +4,11 @@ import { db } from "../shared/firebase";
 import VideoRoom from "./Room/VideoStream";
 
 export function Room() {
-  let peerConnection: RTCPeerConnection | null = null;
-
   const localVideoEl = useRef<HTMLVideoElement>(null);
   const remoteVideoEl = useRef<HTMLVideoElement>(null);
   const roomInputEl = useRef<HTMLInputElement>(null);
 
+  const [disableCameraBtn, setDisableCameraBtn] = useState(false);
   const [disableJoinRoomBtn, setDisableJoinRoomBtn] = useState(false);
   const [disableHangupBtn, setDisableHangupBtn] = useState(false);
   const [disableCreateRoomBtn, setDisableCreateRoomBtn] = useState(true);
@@ -17,6 +16,9 @@ export function Room() {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [roomId, setRoomId] = useState("");
   const [currentRoomText, setCurrentRoomText] = useState("");
+  const [appPeerConnection, setAppPeerConnection] = useState<
+    RTCPeerConnection
+  >();
 
   useEffect(() => {
     if (localVideoEl.current) {
@@ -24,6 +26,7 @@ export function Room() {
     }
     console.log("Stream:", localVideoEl?.current?.srcObject);
   }, [localStream]);
+
   useEffect(() => {
     if (remoteVideoEl.current) {
       remoteVideoEl.current.srcObject = remoteStream;
@@ -38,6 +41,40 @@ export function Room() {
     ],
     iceCandidatePoolSize: 10
   };
+
+  async function hangUp() {
+    (localVideoEl?.current?.srcObject as MediaStream)
+      ?.getTracks()
+      .forEach(track => {
+        track.stop();
+      });
+
+    if (remoteStream) {
+      remoteStream.getTracks().forEach(track => track.stop());
+    }
+
+    if (appPeerConnection) {
+      appPeerConnection.close();
+    }
+
+    setLocalStream(null);
+    setRemoteStream(null);
+
+    setDisableCreateRoomBtn(true);
+    setDisableJoinRoomBtn(true);
+    setDisableHangupBtn(true);
+    setDisableCameraBtn(false);
+
+    setCurrentRoomText("");
+
+    if (roomId) {
+      //ToDo: Move to a cache
+      const roomRef = db.collection("rooms").doc(roomId);
+      await roomRef.delete();
+    }
+
+    document.location.reload(true);
+  }
 
   const joinRoom = async () => {
     setDisableCreateRoomBtn(true);
@@ -56,8 +93,10 @@ export function Room() {
 
     if (roomSnapshot.exists) {
       console.log("Create PeerConnection with configuration: ", configuration);
-      peerConnection = new RTCPeerConnection(configuration);
-      registerPeerConnectionListeners();
+      const peerConnection: RTCPeerConnection = new RTCPeerConnection(
+        configuration
+      );
+      registerPeerConnectionListeners(peerConnection);
       localStream?.getTracks().forEach(track => {
         peerConnection?.addTrack(track, localStream);
       });
@@ -109,10 +148,13 @@ export function Room() {
           }
         });
       });
+      setAppPeerConnection(peerConnection);
     }
   };
 
-  const registerPeerConnectionListeners = () => {
+  const registerPeerConnectionListeners = (
+    peerConnection: RTCPeerConnection
+  ) => {
     peerConnection?.addEventListener("icegatheringstatechange", () => {
       console.log(
         `ICE gathering state changed: ${peerConnection?.iceGatheringState}`
@@ -141,8 +183,10 @@ export function Room() {
     const roomRef = await db.collection("rooms").doc();
 
     console.log("Create PeerConnection with configuration: ", configuration);
-    peerConnection = new RTCPeerConnection(configuration);
-    registerPeerConnectionListeners();
+    const peerConnection: RTCPeerConnection = new RTCPeerConnection(
+      configuration
+    );
+    registerPeerConnectionListeners(peerConnection);
 
     localStream?.getTracks().forEach(track => {
       peerConnection?.addTrack(track, localStream);
@@ -201,6 +245,7 @@ export function Room() {
         }
       });
     });
+    setAppPeerConnection(peerConnection);
   };
 
   const openUserMedia = async () => {
@@ -211,33 +256,18 @@ export function Room() {
     setLocalStream(stream);
     setRemoteStream(new MediaStream());
 
+    setDisableCameraBtn(true);
     setDisableCreateRoomBtn(false);
     setDisableJoinRoomBtn(false);
     setDisableHangupBtn(false);
   };
 
-  const closeUserMedia = async () => {
-    setLocalStream(null);
-    setRemoteStream(null);
-
-    peerConnection = null;
-
-    setDisableCreateRoomBtn(true);
-    setDisableJoinRoomBtn(true);
-    setDisableHangupBtn(true);
-  };
-
   return (
     <div>
       <div className={styles.row}>
-        {!localStream && (
+        {!disableCameraBtn && (
           <button className={styles.button} onClick={openUserMedia}>
             Open Mic & Camera
-          </button>
-        )}
-        {localStream && (
-          <button className={styles.button} onClick={closeUserMedia}>
-            Disable Mic & Camera
           </button>
         )}
         <button
@@ -256,7 +286,7 @@ export function Room() {
         </button>
         <button
           className={styles.button}
-          onClick={createRoom}
+          onClick={hangUp}
           disabled={disableHangupBtn}
         >
           Hangup
