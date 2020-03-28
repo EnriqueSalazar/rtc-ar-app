@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./Room/Room.module.css";
 import { db } from "../shared/firebase";
+import VideoRoom from './Room/VideoRoom';
 
 export function Room() {
   const localVideoEl = useRef<HTMLVideoElement>(null);
@@ -256,33 +257,8 @@ export function Room() {
         <input ref={roomInputEl} />
       </div>
       <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
-        <video
-          style={{
-            background: "black",
-            width: 640,
-            height: "100%",
-            display: "block",
-            margin: "1em"
-          }}
-          id="localVideo"
-          ref={localVideoEl}
-          muted
-          autoPlay
-          playsInline
-        ></video>
-        <video
-          style={{
-            background: "black",
-            width: 640,
-            height: "100%",
-            display: "block",
-            margin: "1em"
-          }}
-          id="remoteVideo"
-          ref={remoteVideoEl}
-          autoPlay
-          playsInline
-        ></video>
+        <VideoRoom stream={localStream}/>
+        <VideoRoom stream={remoteStream}/>
       </div>
     </div>
   );
