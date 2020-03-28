@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import styles from "./Room/Room.module.css";
 import { db } from "../shared/firebase";
 import VideoRoom from "./Room/VideoStream";
 
@@ -264,28 +263,28 @@ export function Room() {
 
   return (
     <div>
-      <div className={styles.row}>
+      <div>
         {!disableCameraBtn && (
-          <button className={styles.button} onClick={openUserMedia}>
+          <button onClick={openUserMedia}>
             Open Mic & Camera
           </button>
         )}
         <button
-          className={styles.button}
+          
           onClick={createRoom}
           disabled={disableCreateRoomBtn}
         >
           Create room
         </button>
         <button
-          className={styles.button}
+          
           onClick={joinRoom}
           disabled={disableJoinRoomBtn}
         >
           Join room
         </button>
         <button
-          className={styles.button}
+          
           onClick={hangUp}
           disabled={disableHangupBtn}
         >
