@@ -1,7 +1,7 @@
 import React from 'react';
-import { Room } from './features/room/Room';
+import { Room } from './App/Room';
 
-import './App.css';
+import './App/App.css';
 
 function App() {
   return (
