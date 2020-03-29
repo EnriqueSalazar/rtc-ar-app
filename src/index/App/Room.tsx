@@ -2,11 +2,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { db } from "../shared/firebase";
 import VideoRoom from "./Room/VideoStream";
 import Button from "@material-ui/core/Button";
+import Paper from "@material-ui/core/Paper";
+import Input from "@material-ui/core/Input";
+import IconButton from "@material-ui/core/IconButton";
+import SendIcon from "@material-ui/icons/Send";
 
 export function Room() {
   const localVideoEl = useRef<HTMLVideoElement>(null);
   const remoteVideoEl = useRef<HTMLVideoElement>(null);
-  const roomInputEl = useRef<HTMLInputElement>(null);
 
   const [disableCameraBtn, setDisableCameraBtn] = useState(false);
   const [disableJoinRoomBtn, setDisableJoinRoomBtn] = useState(true);
@@ -16,6 +19,7 @@ export function Room() {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [roomId, setRoomId] = useState("");
   const [currentRoomText, setCurrentRoomText] = useState("");
+  const [inputRoomId, setInputRoomId] = useState("");
   const [appPeerConnection, setAppPeerConnection] = useState<
     RTCPeerConnection
   >();
@@ -80,18 +84,18 @@ export function Room() {
     setDisableCreateRoomBtn(true);
     setDisableJoinRoomBtn(true);
 
-    if (roomInputEl?.current?.value) {
-      setRoomId(roomInputEl.current.value);
-      await joinRoomById(roomInputEl.current.value);
+    if (inputRoomId) {
+      setRoomId(inputRoomId);
+      await joinRoomById(inputRoomId);
     }
   };
 
   const joinRoomById = async (roomId: string) => {
     const roomRef = db.collection("rooms").doc(`${roomId}`);
-    const roomSnapshot: firebase.firestore.DocumentData = await roomRef.get();
-    console.log("Got room:", roomSnapshot.exists);
+    const roomSnapshot: firebase.firestore.DocumentData = await roomRef?.get();
+    console.log("Got room:", roomSnapshot?.exists);
 
-    if (roomSnapshot.exists) {
+    if (roomSnapshot?.exists) {
       console.log("Create PeerConnection with configuration: ", configuration);
       const peerConnection: RTCPeerConnection = new RTCPeerConnection(
         configuration
@@ -271,20 +275,27 @@ export function Room() {
         <Button onClick={createRoom} disabled={disableCreateRoomBtn}>
           Create room
         </Button>
-        <Button onClick={joinRoom} disabled={disableJoinRoomBtn}>
-          Join room
-        </Button>
         <Button onClick={hangUp} disabled={disableHangupBtn}>
           Hangup
         </Button>
       </div>
       <div>{currentRoomText}</div>
-      {!disableJoinRoomBtn && (
-        <div>
-          <input ref={roomInputEl} />
-        </div>
-      )}
-
+      <Paper component="form">
+        <Input
+          disabled={disableJoinRoomBtn}
+          placeholder="Room ID"
+          onChange={e => {
+            setInputRoomId(e?.target?.value || "");
+          }}
+        />
+        <IconButton
+          type="submit"
+          disabled={disableJoinRoomBtn || !inputRoomId}
+          onClick={joinRoom}
+        >
+          <SendIcon />
+        </IconButton>
+      </Paper>
       <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
         <VideoRoom stream={localStream} />
         <VideoRoom stream={remoteStream} />
