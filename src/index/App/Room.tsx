@@ -290,7 +290,7 @@ export function Room() {
 
   const openUserMedia = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
+      video: { frameRate: { ideal: 10, max: 20 } },
       audio: true
     });
     setLocalStream(stream);
